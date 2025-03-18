@@ -1,0 +1,8 @@
+# Ignorar o ambiente virtual
+venv/
+*.pyc
+__pycache__/
+
+# Ignorar arquivos grandes ou temporários
+*.log
+.DS_Store
