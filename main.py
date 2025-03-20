@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
 
 # 🔹 Caminho do dataset local
 dataset_path = r"C:\Users\isabe\Desktop\EDIT\EDIT\Final Project\LTP_PROJECT\dataset.csv"
@@ -42,8 +42,13 @@ models_params = {
 # Dicionário para armazenar os resultados
 results = {}
 
+# Criando uma figura para as matrizes de confusão
+fig, axes = plt.subplots(3, 3, figsize=(15, 15))  # 3x3 grid para 8 modelos
+fig.suptitle("Matrizes de Confusão para Todos os Modelos", fontsize=16)
+axes = axes.ravel()  # Achatar a matriz de eixos para facilitar o acesso
+
 # Testando cada modelo com GridSearchCV para ajuste de hiperparâmetros
-for name, (model, params) in models_params.items():
+for idx, (name, (model, params)) in enumerate(models_params.items()):
     print(f"🔄 Treinando {name}...")
     grid_search = GridSearchCV(model, params, cv=5, n_jobs=-1, verbose=1)
     grid_search.fit(X_train, y_train)
@@ -64,6 +69,17 @@ for name, (model, params) in models_params.items():
         "Recall": recall,
         "F1-Score": f1
     }
+    
+    # Calculando e plotando a matriz de confusão
+    cm = confusion_matrix(y_test, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_model.classes_)
+    disp.plot(ax=axes[idx], cmap=plt.cm.Blues)
+    axes[idx].set_title(f"Matriz de Confusão - {name}")
+
+# Ajustando layout e salvando a figura
+plt.tight_layout()
+plt.savefig("matrizes_confusao.png", bbox_inches='tight', dpi=300)  # Salva a imagem
+plt.close(fig)  # Fecha a figura para liberar memória
 
 # Convertendo resultados para DataFrame
 results_df = pd.DataFrame.from_dict(results, orient='index')
@@ -87,3 +103,4 @@ plt.savefig("metricas_modelos.png", bbox_inches='tight', dpi=300)  # Salva a ima
 plt.show()
 
 print("✅ Imagem salva como 'metricas_modelos.png'.")
+print("✅ Imagem das matrizes de confusão salva como 'matrizes_confusao.png'.")
