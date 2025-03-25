@@ -26,54 +26,71 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # 🔍 Definindo o modelo e hiperparâmetros para GridSearch
 rf = RandomForestClassifier(random_state=42)
+
 param_grid = {
-    'n_estimators': [50, 100, 200],
-    'max_depth': [None, 10, 20]
+    'n_estimators': [100, 200],
+    'max_depth': [5, 10, 15],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'max_features': ['sqrt', 'log2']
 }
 
 # 🧠 Treinando com GridSearchCV
-print("🔄 Treinando Random Forest...")
+print("🔄 Treinando Random Forest com GridSearchCV...")
 grid_search = GridSearchCV(rf, param_grid, cv=5, n_jobs=-1, verbose=1)
 grid_search.fit(X_train, y_train)
 best_rf = grid_search.best_estimator_
 
-# ✅ Fazendo predições
-y_pred = best_rf.predict(X_test)
+print(f"\n🔧 Melhores hiperparâmetros encontrados: {grid_search.best_params_}")
 
-# 🧮 Calculando métricas
-accuracy = accuracy_score(y_test, y_pred)
-precision = precision_score(y_test, y_pred)
-recall = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
+# ✅ Fazendo predições no treino e teste
+y_train_pred = best_rf.predict(X_train)
+y_test_pred = best_rf.predict(X_test)
 
+# 🧮 Métricas no treino
+train_accuracy = accuracy_score(y_train, y_train_pred)
+train_precision = precision_score(y_train, y_train_pred)
+train_recall = recall_score(y_train, y_train_pred)
+train_f1 = f1_score(y_train, y_train_pred)
+
+# 🧮 Métricas no teste
+test_accuracy = accuracy_score(y_test, y_test_pred)
+test_precision = precision_score(y_test, y_test_pred)
+test_recall = recall_score(y_test, y_test_pred)
+test_f1 = f1_score(y_test, y_test_pred)
+
+# 📋 Exibindo métricas no console
 print("\n📈 Métricas do Random Forest:")
-print(f"Accuracy : {accuracy:.4f}")
-print(f"Precision: {precision:.4f}")
-print(f"Recall   : {recall:.4f}")
-print(f"F1-Score : {f1:.4f}")
+print(f"{'Métrica':<10} | {'Treino':<10} | {'Teste':<10}")
+print("-" * 35)
+print(f"Accuracy   | {train_accuracy:.4f}    | {test_accuracy:.4f}")
+print(f"Precision  | {train_precision:.4f}    | {test_precision:.4f}")
+print(f"Recall     | {train_recall:.4f}    | {test_recall:.4f}")
+print(f"F1-Score   | {train_f1:.4f}    | {test_f1:.4f}")
 
 # 📌 Salvando as métricas em uma imagem
 metrics_df = pd.DataFrame({
     "Métrica": ["Accuracy", "Precision", "Recall", "F1-Score"],
-    "Valor": [accuracy, precision, recall, f1]
+    "Treino": [train_accuracy, train_precision, train_recall, train_f1],
+    "Teste": [test_accuracy, test_precision, test_recall, test_f1]
 })
 
-plt.figure(figsize=(8, 3))
+plt.figure(figsize=(10, 4))
 plt.axis('off')
 plt.table(cellText=metrics_df.values,
           colLabels=metrics_df.columns,
           loc='center',
           cellLoc='center',
-          colColours=['#f3f3f3'] * 2)
-plt.title("📋 Métricas - Random Forest", fontsize=14, pad=10)
-plt.savefig("metricas_random_forest.png", bbox_inches='tight', dpi=300)
+          colColours=['#f3f3f3'] * 3)
+plt.title("📋 Métricas - Treino vs Teste (Random Forest)", fontsize=14, pad=10)
+plt.savefig("metricas_treino_teste_rf.png", bbox_inches='tight', dpi=300)
 plt.show()
 
-# 🔲 Matriz de confusão
-cm = confusion_matrix(y_test, y_pred)
+# 🔲 Matriz de confusão (teste)
+cm = confusion_matrix(y_test, y_test_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_rf.classes_)
 disp.plot(cmap=plt.cm.Blues)
-plt.title("📌 Matriz de Confusão - Random Forest")
+plt.title("📌 Matriz de Confusão - Random Forest (Teste)")
 plt.savefig("matriz_confusao_rf.png", dpi=300)
 plt.show()
 
@@ -101,4 +118,4 @@ plt.title("🌳 Uma Árvore do Random Forest")
 plt.savefig("arvore_individual_rf.png", dpi=300)
 plt.show()
 
-print("✅ Todas as imagens foram salvas com sucesso.")
+print("\n✅ Todas as imagens foram salvas com sucesso.")
